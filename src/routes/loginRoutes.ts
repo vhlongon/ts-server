@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 
 // a way to fix inconsistency with a interface is to extend the original one
@@ -8,6 +8,16 @@ import { Router } from 'express';
 interface RequestWithBody extends Request {
   body: { [key: string]: string | undefined };
 }
+
+const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.session && req.session.loggedIn) {
+    next();
+    return;
+  }
+
+  res.status(403);
+  res.send('Not permitted');
+};
 
 const router = Router();
 
@@ -73,6 +83,10 @@ router.post('/login', (req: RequestWithBody, res: Response) => {
       </div>
     `);
   }
+});
+
+router.get('/protected', requireAuth, (req: Request, res: Response) => {
+  res.send('Welcome to protected route, logged in user');
 });
 
 export { router };
